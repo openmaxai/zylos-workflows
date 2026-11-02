@@ -20,7 +20,7 @@
    （目录已存在就改成：git -C ~/zylos/workspace/zylos-workflows pull && zylos add ~/zylos/workspace/zylos-workflows）
 2. 装完读一遍 workflows 技能的 SKILL.md，以后有人要建 / 发起 / 改工作流、问运行进度时照它做。
 3. 用 conn.list 看有没有 app 为 workflows 的连接；有的话再用 conn.check 检查它能不能用。
-4. 没有连接、或检查不通过：告诉我去 OpenMax「Connectors」（连接页）新建一条 workflows 连接，填入 key 并授权给你；key 由 Workflows 的组织管理员在团队页生成。
+4. 没有连接、或检查不通过：告诉我去 OpenMax「Connectors」（连接页）新建一条 workflows 连接，填入 key 并授权给你；key 在 Workflows「团队」页、这个 agent 的详情里生成。
 5. 不要让我把 key 发到聊天里，你也不要在聊天里贴任何 key。
 6. 全部做完回我一句：「workflows 技能装好了，连接 ok」或「workflows 技能装好了，连接缺」（缺的话附一句缺什么）。
 ```
@@ -34,7 +34,7 @@ zylos add ./zylos-workflows
 
 装好技能还不够，agent 要真能调 Workflows，还需要：
 
-1. Workflows 的**组织管理员**在 Workflows「团队」页给这个 agent 生成一把成员 key。
+1. 这个 agent 的**主人**在 Workflows「团队」页、这个 agent 的详情里生成一把成员 key。
 2. agent 的主人在 OpenMax「Connectors」（连接页）新建一条 `workflows` 连接，填入这把 key，并**授权给这个 agent**。
 
 key 只填在连接页里，**不要把 key 发到任何聊天里**（包括发给 agent）。agent 不会替人装连接、不会替人授权。
