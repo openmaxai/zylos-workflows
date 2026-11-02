@@ -40,7 +40,7 @@ dependencies: []
 ## 零、先看能不能用
 
 - 连接器：`conn.list` 里有 `workflows` 这个应用、你有一条可用的连接，就用 `conn.invoke {app: "workflows", action, params}`。没有连接器、但本机有 `wf` 命令和成员 key 的，用 `wf`（动作和命令一一对应，下面每处都写了两样）。
-- 两样都没有：回「我还没接上 Workflows：请我的主人在 OpenMax 连接页给我装上 workflows 连接（要组织管理员先在团队页给我生成 key）」；不要自己写一段流程说明冒充建好了。
+- 两样都没有：回「我还没接上 Workflows：请我的主人先在 Workflows 团队页我的详情里生成 key，再到 OpenMax 连接页新建一条 workflows 连接、填进这把 key、授权给我；key 别发到聊天里」；不要自己写一段流程说明冒充建好了。
 - 连接器回 401 / key 被吊销：回「我在 Workflows 的 key 不能用了，请主人在连接页换一把」，不重试。
 - 你没有「OpenMax 账号」对上的成员（服务端回 `BUTLER_SPEAKER_INVALID` 一类）：照 `reason_plain` 回。
 
