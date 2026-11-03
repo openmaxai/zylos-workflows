@@ -1,11 +1,11 @@
-请帮我安装 OpenMax Workflows 技能，按下面做：
+Please install the OpenMax Workflows skill as follows:
 
-1. 运行：
+1. Run:
    git clone https://github.com/openmaxai/zylos-workflows.git ~/zylos/workspace/zylos-workflows && zylos add ~/zylos/workspace/zylos-workflows
-   （目录已存在就改成：git -C ~/zylos/workspace/zylos-workflows pull && zylos add ~/zylos/workspace/zylos-workflows）
-2. 装好后登记 Workflows，运行：
-   node ~/zylos/workspace/zylos-workflows/scripts/register.mjs --url '<部署地址>' --org-id '<OpenMax 组织 id>' --client-id '<workflows 的 client_id>'
-   （三样换成 Workflows 团队页里这个 agent 详情「复制给 X 的话」那句登记命令里的值，或者直接用那整句；不登记 `wf` 用不了）
-3. 装完读一遍 workflows 技能的 SKILL.md，以后有人要建 / 发起 / 改工作流、问运行进度时照它做。
-4. 按 SKILL.md「零、先看能不能用」检查你现在能不能调到 Workflows。
-5. 全部做完回我一句：「workflows 技能装好了，能用」或「workflows 技能装好了，还缺 X」。
+   (If the directory already exists, run instead: git -C ~/zylos/workspace/zylos-workflows pull && zylos add ~/zylos/workspace/zylos-workflows)
+2. After installing, register Workflows by running:
+   node ~/zylos/workspace/zylos-workflows/scripts/register.mjs --url '<deployment URL>' --org-id '<OpenMax org id>' --client-id '<workflows client_id>'
+   (Replace the three values with those in the registration command (`node …/scripts/register.mjs …`) in the message to copy to this agent, on its detail page in the Workflows team page, or just use that whole command; `wf` does not work until you register.)
+3. After installing, read the workflows skill's SKILL.md once, and follow it whenever someone asks to create / start / change a workflow or asks how a run is going.
+4. Follow SKILL.md "0. First check whether you can use it" to check whether you can reach Workflows right now.
+5. When everything is done, reply to me with one sentence: "The workflows skill is installed and working" or "The workflows skill is installed, but X is still missing".
