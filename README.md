@@ -1,55 +1,22 @@
-# OpenMax Workflows skill
+# workflows skill
 
-让 agent 能用 OpenMax Workflows（工作流）：有人说要建、发起、改工作流，或问运行进度时，该调哪个动作、怎么回。
+让 agent 知道能用 OpenMax Workflows：有人说要建、发起、改工作流，或问运行进度时，该调哪个动作、怎么回。正本是同目录的 [SKILL.md](SKILL.md)，短版 [connector-description.txt](connector-description.txt) 由 `tools/api/gen_connector.py` 写进连接器 `workflows` 的应用描述（非 zylos 的 agent 从那里读到）。两份和规格同一张 MR 改，`tools/skill/check.py`（CI trace-check 作业）核规格编号、动作名、`wf` 命令都真有。
 
-- [SKILL.md](SKILL.md)：给 agent 照做的完整说明（zylos 技能入口）。
-- [connector-description.txt](connector-description.txt)：同一套规则的短版，用作 `workflows` 连接器的应用描述，供不装本技能的 agent 读。
-- [PROMPT.md](PROMPT.md)：发给你自己 agent 的一段话，让它自己装好。
+## 装（zylos agent）
 
-本技能只是一份说明：没有服务、不装依赖、不收凭据。
-
-## 一句话让你的 agent 装好
-
-把下面这段原样私聊发给你的 zylos agent（同 [PROMPT.md](PROMPT.md)）：
-
-```text
-请帮我安装 OpenMax Workflows 技能，按下面做：
-
-1. 运行：
-   cd ~/zylos/workspace && git clone https://github.com/openmaxai/zylos-workflows.git && zylos add ./zylos-workflows
-   （目录已存在就改成：git -C ~/zylos/workspace/zylos-workflows pull && zylos add ~/zylos/workspace/zylos-workflows）
-2. 装完读一遍 workflows 技能的 SKILL.md，以后有人要建 / 发起 / 改工作流、问运行进度时照它做。
-3. 用 conn.list 看有没有 app 为 workflows 的连接；有的话再用 conn.check 检查它能不能用。
-4. 没有连接、或检查不通过：告诉我去 OpenMax「Connectors」（连接页）新建一条 workflows 连接，填入 key 并授权给你；key 由 Workflows 的组织管理员在团队页生成。
-5. 不要让我把 key 发到聊天里，你也不要在聊天里贴任何 key。
-6. 全部做完回我一句：「workflows 技能装好了，连接 ok」或「workflows 技能装好了，连接缺」（缺的话附一句缺什么）。
-```
-
-## 手动安装（zylos agent）
+由 agent 的主人装（不替人装）：
 
 ```bash
-git clone https://github.com/openmaxai/zylos-workflows.git
-zylos add ./zylos-workflows
+git clone https://github.com/openmaxai/zylos-workflows.git ~/zylos/workspace/zylos-workflows
+zylos add ~/zylos/workspace/zylos-workflows
+# 登记（1.3-AT.8）：三样从主人发的安装话里取，安装话里已经写好整条命令
+node ~/zylos/workspace/zylos-workflows/scripts/register.mjs --url '<部署地址>' --org-id '<OpenMax 组织 id>' --client-id '<workflows 的 client_id>'
 ```
 
-装好技能还不够，agent 要真能调 Workflows，还需要：
+公开仓库 [openmaxai/zylos-workflows](https://github.com/openmaxai/zylos-workflows) 根目录的 `SKILL.md`、`README.md`、`connector-description.txt`、`PROMPT.md` 全部从本目录同步过去（CR-224），不在公开仓库单独改。`PROMPT.md` 是给人复制给 agent 的长版安装话，装法和「复制给 agent 的话」（P8-SA.8）相同。
 
-1. Workflows 的**组织管理员**在 Workflows「团队」页给这个 agent 生成一把成员 key。
-2. agent 的主人在 OpenMax「Connectors」（连接页）新建一条 `workflows` 连接，填入这把 key，并**授权给这个 agent**。
-
-key 只填在连接页里，**不要把 key 发到任何聊天里**（包括发给 agent）。agent 不会替人装连接、不会替人授权。
+只是一份说明加一个登记脚本（`scripts/register.mjs`，只用 Node 自带模块），没有服务、不装依赖、不收凭据。不用 key：1.3.2 起 workflows 不再发 key（1.3-KEY.2），agent 用 `wf` 命令、拿自己的 OpenMax 身份调 workflows（1.3-AT.8）；手上已有一条能用的 workflows 连接（1.3.2 之前发的 key）的，没有 `wf` 时继续用连接器，到 1.4 停（1.3-AT.9）。
 
 ## 升级
 
-照装法重新 `zylos add`：
-
-```bash
-git -C zylos-workflows pull
-zylos add ./zylos-workflows
-```
-
-不要用 `zylos upgrade workflows`：从本地目录装的组件，zylos 不去拉仓库，只会提示从原路径重装。
-
-## License
-
-MIT，见 [LICENSE](LICENSE)。
+照装法重新 `zylos add`：先 `git -C ~/zylos/workspace/zylos-workflows pull`，再 `zylos add ~/zylos/workspace/zylos-workflows`。不要用 `zylos upgrade workflows`：本地目录装的组件 zylos 不去拉仓库，只会提示从原路径重装。frontmatter 里 `upgrade.repo` 写的是公开仓库 `openmaxai/zylos-workflows`（组件规范要求必填）。

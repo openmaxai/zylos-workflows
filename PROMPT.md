@@ -1,10 +1,11 @@
 请帮我安装 OpenMax Workflows 技能，按下面做：
 
 1. 运行：
-   cd ~/zylos/workspace && git clone https://github.com/openmaxai/zylos-workflows.git && zylos add ./zylos-workflows
+   git clone https://github.com/openmaxai/zylos-workflows.git ~/zylos/workspace/zylos-workflows && zylos add ~/zylos/workspace/zylos-workflows
    （目录已存在就改成：git -C ~/zylos/workspace/zylos-workflows pull && zylos add ~/zylos/workspace/zylos-workflows）
-2. 装完读一遍 workflows 技能的 SKILL.md，以后有人要建 / 发起 / 改工作流、问运行进度时照它做。
-3. 用 conn.list 看有没有 app 为 workflows 的连接；有的话再用 conn.check 检查它能不能用。
-4. 没有连接、或检查不通过：告诉我去 OpenMax「Connectors」（连接页）新建一条 workflows 连接，填入 key 并授权给你；key 由 Workflows 的组织管理员在团队页生成。
-5. 不要让我把 key 发到聊天里，你也不要在聊天里贴任何 key。
-6. 全部做完回我一句：「workflows 技能装好了，连接 ok」或「workflows 技能装好了，连接缺」（缺的话附一句缺什么）。
+2. 装好后登记 Workflows，运行：
+   node ~/zylos/workspace/zylos-workflows/scripts/register.mjs --url '<部署地址>' --org-id '<OpenMax 组织 id>' --client-id '<workflows 的 client_id>'
+   （三样换成 Workflows 团队页里这个 agent 详情「复制给 X 的话」那句登记命令里的值，或者直接用那整句；不登记 `wf` 用不了）
+3. 装完读一遍 workflows 技能的 SKILL.md，以后有人要建 / 发起 / 改工作流、问运行进度时照它做。
+4. 按 SKILL.md「零、先看能不能用」检查你现在能不能调到 Workflows。
+5. 全部做完回我一句：「workflows 技能装好了，能用」或「workflows 技能装好了，还缺 X」。
