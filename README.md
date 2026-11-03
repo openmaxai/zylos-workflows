@@ -1,19 +1,19 @@
 # workflows skill
 
-让 agent 知道能用 OpenMax Workflows：有人说要建、发起、改工作流，或问运行进度时，该调哪个动作、怎么回。正本是同目录的 [SKILL.md](SKILL.md)，短版 [connector-description.txt](connector-description.txt) 由 `tools/api/gen_connector.py` 写进连接器 `workflows` 的应用描述（非 zylos 的 agent 从那里读到）。两份和规格同一张 MR 改，`tools/skill/check.py`（CI trace-check 作业）核规格编号、动作名、`wf` 命令都真有。
+Lets an agent know it can use OpenMax Workflows: when someone asks to create, start, or change a workflow, or asks how a run is going, which action to call and how to reply. The source of truth is [SKILL.md](SKILL.md) in this directory; the short version, [connector-description.txt](connector-description.txt), is written by `tools/api/gen_connector.py` into the description of the `workflows` connector app (where non-zylos agents read it). Both are changed in the same MR as the spec; `tools/skill/check.py` (the CI trace-check job) verifies that every spec ID, action name, and `wf` command they mention really exists.
 
-## 装（zylos agent）
+## Install (zylos agent)
 
-由 agent 的主人装（不替人装）：
+The agent's owner installs it (no one installs it on someone else's behalf):
 
 ```bash
 git clone https://github.com/openmaxai/zylos-workflows.git ~/zylos/workspace/zylos-workflows
 zylos add ~/zylos/workspace/zylos-workflows
-# 登记（1.3-AT.8）：三样从主人发的安装话里取，安装话里已经写好整条命令
-node ~/zylos/workspace/zylos-workflows/scripts/register.mjs --url '<部署地址>' --org-id '<OpenMax 组织 id>' --client-id '<workflows 的 client_id>'
+# Register (1.3-AT.8): take the three values from the install message your owner sent; it already contains the full command
+node ~/zylos/workspace/zylos-workflows/scripts/register.mjs --url '<deployment URL>' --org-id '<OpenMax org id>' --client-id '<workflows client_id>'
 ```
 
-再装 `wf` 命令行（1.3-AT.10 ②）：从同一个公开仓库最新的 release 取本机平台那一个，按刚 clone 下来的仓库根目录里的 `SHA256SUMS` 核对过才装（这份和技能同一次 `git clone` 来，不从 release 取：只换 release 附件过不了核对）；核不过就停，不装、不重试别的地址：
+Then install the `wf` CLI (1.3-AT.10 ②): download the binary for this platform from the latest release of the same public repo, and install it only after it matches the `SHA256SUMS` in the root of the repo you just cloned (that file comes from the same `git clone` as the skill, not from the release, so swapping a release asset alone cannot pass the check). If the check fails, stop: do not install, and do not retry from another URL.
 
 ```bash
 os=$(uname -s | tr A-Z a-z); arch=$(uname -m)
@@ -24,17 +24,17 @@ s="$HOME/zylos/workspace/zylos-workflows/SHA256SUMS"
 if command -v sha256sum >/dev/null; then c='sha256sum -c -'; else c='shasum -a 256 -c -'; fi
 curl -fsSL -o "$d/$f" "$u/$f" && [ -f "$s" ] && (cd "$d" && grep -E "^[0-9a-f]{64}  $f\$" "$s" | $c) \
   && install -d ~/.local/bin && install -m 0755 "$d/$f" ~/.local/bin/wf \
-  && echo "wf 已装好：$(sha256sum ~/.local/bin/wf 2>/dev/null || shasum -a 256 ~/.local/bin/wf)"
+  && echo "wf installed: $(sha256sum ~/.local/bin/wf 2>/dev/null || shasum -a 256 ~/.local/bin/wf)"
 ok=$?; rm -rf "$d"
-[ $ok -eq 0 ] || { echo "wf 没装：下载失败或 sha256 核不过" >&2; false; }
+[ $ok -eq 0 ] || { echo "wf not installed: download failed or sha256 mismatch" >&2; false; }
 ```
 
-仓库里没有 `SHA256SUMS`、里面没有本机平台那一行（`-c` 读到空的）、或 clone 下来的版本和最新 release 对不上，都判不过、不装；先 `git -C ~/zylos/workspace/zylos-workflows pull` 再装。没装好时最后一行退出非 0。
+If the repo has no `SHA256SUMS`, it has no line for this platform (`-c` reads nothing), or the cloned version does not match the latest release, the check fails and nothing is installed; run `git -C ~/zylos/workspace/zylos-workflows pull` first, then install again. If installation did not succeed, the last line exits non-zero.
 
-公开仓库 [openmaxai/zylos-workflows](https://github.com/openmaxai/zylos-workflows) 根目录的 `SKILL.md`、`README.md`、`connector-description.txt`、`PROMPT.md` 和登记脚本 `scripts/register.mjs` 全部从本目录同步过去（`register.test.mjs` 和 `testdata/` 只在本仓库测，不同步）（CR-224），不在公开仓库单独改；`SHA256SUMS` 取自同一版 release 的 `release-wf` 作业产物、和它们同一个提交进仓库。`PROMPT.md` 是给人复制给 agent 的长版安装话，装法和「复制给 agent 的话」（P8-SA.8）相同。
+`SKILL.md`, `README.md`, `connector-description.txt`, `PROMPT.md` and the registration script `scripts/register.mjs` in the root of the public repo [openmaxai/zylos-workflows](https://github.com/openmaxai/zylos-workflows) are all synced from this directory (`register.test.mjs` and `testdata/` are tested only in this repo and are not synced) (CR-224); do not edit them in the public repo. `SHA256SUMS` comes from the `release-wf` job artifact of the same release and is committed together with them. `PROMPT.md` is the long install message a person copies to an agent; it installs the same way as the "message to copy to the agent" (P8-SA.8).
 
-只是一份说明加一个登记脚本（`scripts/register.mjs`，只用 Node 自带模块），没有服务、不装依赖、不收凭据。不用 key：1.3.2 起 workflows 不再发 key（1.3-KEY.2），agent 用 `wf` 命令、拿自己的 OpenMax 身份调 workflows（1.3-AT.8）；手上已有一条能用的 workflows 连接（1.3.2 之前发的 key）的，没有 `wf` 时继续用连接器，到 1.4 停（1.3-AT.9）。
+This is just a document plus a registration script (`scripts/register.mjs`, Node built-in modules only): no service, no dependencies, no credentials collected. No key needed: from 1.3.2 on, workflows no longer issues keys (1.3-KEY.2); the agent uses the `wf` CLI and calls workflows with its own OpenMax identity (1.3-AT.8). An agent that already has a working workflows connection (a key issued before 1.3.2) and no `wf` keeps using the connector until 1.4 (1.3-AT.9).
 
-## 升级
+## Upgrade
 
-照装法重新 `zylos add`：先 `git -C ~/zylos/workspace/zylos-workflows pull`，再 `zylos add ~/zylos/workspace/zylos-workflows`。不要用 `zylos upgrade workflows`：本地目录装的组件 zylos 不去拉仓库，只会提示从原路径重装。frontmatter 里 `upgrade.repo` 写的是公开仓库 `openmaxai/zylos-workflows`（组件规范要求必填）。
+Re-run the install steps (`zylos add`): first `git -C ~/zylos/workspace/zylos-workflows pull`, then `zylos add ~/zylos/workspace/zylos-workflows`. Do not use `zylos upgrade workflows`: for a component installed from a local directory, zylos does not pull the repo and only tells you to reinstall from the original path. `upgrade.repo` in the frontmatter is the public repo `openmaxai/zylos-workflows` (required by the component spec).
