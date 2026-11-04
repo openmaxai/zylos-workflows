@@ -6,6 +6,7 @@
 // File: <home>/zylos/components/workflows/registration.json, 0600, regular file, {"version":1,"orgs":[{url,org_id,client_id}]}, one entry per org.
 // The home directory comes from the account database (os.userInfo), not $HOME (same as the wf side that reads it); --zylos-root is for tests only.
 // Collects and writes no credentials: none of the three values is a credential.
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -45,7 +46,29 @@ export function register({ url, orgId, clientId, root, replace = false }) {
 	if (!ID.test(clientId || "")) throw Object.assign(new Error("invalid client_id"), { exit: 2 });
 	const dir = path.join(root, "components", "workflows");
 	const file = path.join(dir, "registration.json");
-	fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+	// Follow a symlink for neither components nor components/workflows: if either is a symlink or not a directory, don't write (Lova !1149 note 238622 nit-1, Lisa !1156 note 238891 nit-1);
+	// lstat before creating, so a symlink pointing at a file also gets this message instead of Node's raw EEXIST (Lisa same note nit-2)
+	for (const d of [path.join(root, "components"), dir]) {
+		try {
+			if (!fs.lstatSync(d).isDirectory()) throw Object.assign(new Error(`${d} is not a directory (maybe a symlink); leaving it alone`), { exit: 2 });
+		} catch (e) {
+			if (e.code !== "ENOENT") throw e;
+			fs.mkdirSync(d, { recursive: true, mode: 0o700 });
+		}
+	}
+	// If it already exists with wider permissions, tighten it to 0700 (Boot note 238589 nit-1); open with O_NOFOLLOW and fchmod, so a swap to a symlink after the lstat is not followed either (Boot !1156 note 238898 nit-1)
+	const dfd = fs.openSync(dir, fs.constants.O_RDONLY | fs.constants.O_DIRECTORY | fs.constants.O_NOFOLLOW);
+	try {
+		if (fs.fstatSync(dfd).mode % 0o1000 !== 0o700) fs.fchmodSync(dfd, 0o700);
+	} finally {
+		fs.closeSync(dfd);
+	}
+	// Remove temp files left behind by an earlier crash once they are over an hour old; leave newer ones alone so we never delete one being written right now (Lisa !1156 note 238891 nit-3)
+	for (const n of fs.readdirSync(dir)) {
+		if (!/^\.registration\..+\.tmp$/.test(n)) continue;
+		const t = fs.lstatSync(path.join(dir, n));
+		if (t.isFile() && Date.now() - t.mtimeMs > 3600e3) fs.rmSync(path.join(dir, n), { force: true });
+	}
 	let orgs = [];
 	let st = null;
 	try {
@@ -69,7 +92,8 @@ export function register({ url, orgId, clientId, root, replace = false }) {
 		orgs[i] = row;
 	} else orgs.push(row);
 	// Write a temp file (0600) in the same directory, then rename: a partial write never leaves a broken file, and it never exists with other permissions
-	const tmp = path.join(dir, `.registration.${process.pid}.tmp`);
+	// Random suffix in the name: a temp file left behind by an earlier crash never collides with this one (Lova note 238622 nit-2)
+	const tmp = path.join(dir, `.registration.${process.pid}.${crypto.randomBytes(6).toString("hex")}.tmp`);
 	fs.writeFileSync(tmp, JSON.stringify({ version: 1, orgs }) + "\n", { mode: 0o600, flag: "wx" });
 	fs.chmodSync(tmp, 0o600);
 	fs.renameSync(tmp, file);
