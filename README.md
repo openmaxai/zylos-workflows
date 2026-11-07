@@ -37,4 +37,17 @@ This is just a document plus a registration script (`scripts/register.mjs`, Node
 
 ## Upgrade
 
-Re-run the install steps (`zylos add`): first `git -C ~/zylos/workspace/zylos-workflows pull`, then `zylos add ~/zylos/workspace/zylos-workflows`. Do not use `zylos upgrade workflows`: for a component installed from a local directory, zylos does not pull the repo and only tells you to reinstall from the original path. `upgrade.repo` in the frontmatter is the public repo `openmaxai/zylos-workflows` (required by the component spec).
+Re-run the install steps (`zylos add`), but remove the installed copy first: a component installed from a local directory is never updated in place. `zylos add` on an installed component only says "already installed", and `zylos upgrade workflows` only says to reinstall from the original path. `zylos uninstall workflows --yes` (without `--purge`) keeps the data directory, so the registration (`~/zylos/components/workflows/registration.json`) stays and you do not register again:
+
+```bash
+r=~/zylos/components/workflows/registration.json
+before=$(sha256sum "$r" 2>/dev/null || shasum -a 256 "$r")
+git -C ~/zylos/workspace/zylos-workflows pull
+zylos uninstall workflows --yes
+zylos add ~/zylos/workspace/zylos-workflows --yes
+grep -m1 '^version' ~/zylos/.claude/skills/workflows/SKILL.md
+after=$(sha256sum "$r" 2>/dev/null || shasum -a 256 "$r")
+[ "$before" = "$after" ] && echo "registration kept" || echo "registration changed: register again with the command from your install message" >&2
+```
+
+Never add `--purge`: it deletes the registration. Then upgrade the `wf` CLI with the install block above (it checks the new `SHA256SUMS` from the repo you just pulled), and check `wf --version`. `upgrade.repo` in the frontmatter is the public repo `openmaxai/zylos-workflows` (required by the component spec).
