@@ -1,6 +1,6 @@
 ---
 name: workflows
-version: 0.1.45
+version: 0.1.46
 description: >
   OpenMax Workflows: create, start, and change workflows on someone's behalf, and answer how runs are going.
   Use when someone in an OpenMax DM or group asks you to build / create / make a workflow,
@@ -148,7 +148,7 @@ Every message a person sends you in an OpenMax DM: **before anything else** — 
 - **Fixed recipe: change one step** (e.g. "change step 2's name to Manager review", or "change this" with the steps window open). Four calls, one write:
   1. Reply 「在改」 through `ack.mjs`, without waiting (above).
   2. `wf butler said <message_id>` with `--on-behalf '<json>'` (section 1-1) → `workflow_id`, and `step_n` if they were editing a step. Typed directly in OpenMax: work out the workflow and step as section 1-1 says.
-  3. `wf step list <workflow_id>` → the row whose `seq` is that step number; take its `id` as `<sid>`. If no row or several rows match what they said, ask which step; do not guess.
+  3. `wf step list <workflow_id>` → the row whose `seq` is that step number; take its `id` as `<sid>`. If no row or several rows match what they said, ask which step; do not guess. If the list comes back with `blocked.reason = BUTLER_SPEAKER_REQUIRED`, that only says you read it without saying whom for: `can.edit` is true, carry on with step 4 (it carries the on-behalf header). Any other `blocked.reason` (`viewer`, `BUTLER_LEVEL_TOO_LOW`, …) means the steps cannot be changed through you (`can.edit` is false); then reply with its `reason_plain`. Never tell the person you only have view access because of `BUTLER_SPEAKER_REQUIRED` (#851).
   4. `wf step update <sid>` with `--on-behalf '<json>'` and `--body '<fields>'`, only the fields that change. `--body` takes the JSON inline (or a file path); leave out `--if-match`, the CLI reads the step's revision itself; a new idempotency key is made for you. Then paste the server's sentence as-is.
 
   ```
