@@ -1,6 +1,6 @@
 ---
 name: workflows
-version: 0.1.52
+version: 0.1.53
 description: >
   OpenMax Workflows: create, start, and change workflows on someone's behalf, and answer how runs are going.
   Use when someone in an OpenMax DM or group asks you to build / create / make a workflow,
